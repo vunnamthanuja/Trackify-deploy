@@ -1,27 +1,34 @@
-const mysql = require('mysql2');
+const { Pool } = require('pg');
 require('dotenv').config();
 
-// Create connection pool
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'trackify_db',
-    port: process.env.DB_PORT || 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+// Create PostgreSQL connection pool
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Get promise-based connection
-const promisePool = pool.promise();
+// Get promise-based connection (for compatibility with existing code)
+const promisePool = {
+    execute: async (query, params) => {
+        const client = await pool.connect();
+        try {
+            const result = await client.query(query, params);
+            return [result.rows, result.fields];
+        } finally {
+            client.release();
+        }
+    },
+    query: async (query, params) => {
+        return await pool.query(query, params);
+    }
+};
 
 // Test database connection
 const testConnection = async () => {
     try {
-        const connection = await promisePool.getConnection();
+        const client = await pool.connect();
         console.log('✅ Database connected successfully');
-        connection.release();
+        client.release();
         return true;
     } catch (error) {
         console.error('❌ Database connection failed:', error.message);

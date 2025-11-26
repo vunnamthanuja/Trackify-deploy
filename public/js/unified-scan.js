@@ -204,29 +204,32 @@ async function registerVisitor() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/visitors/register`, {
+        // ✅ STEP 1: Register visitor with backend (creates base visitor record)
+        const registerResponse = await fetch(`${API_BASE_URL}/visitors/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 name,
+                phoneNumber: currentPhone,
                 email,
-                phoneNumber: currentPhone, 
-                place, 
-                otp 
+                place,
+                otp
             })
         });
 
-        const data = await response.json();
+        const registerData = await registerResponse.json();
 
-        if (response.ok && data.success) {
-            showMessage('Registration successful! Now enter visit details.', 'success');
-            isNewVisitor = false;
-            document.getElementById('newVisitorForm').style.display = 'none';
-            document.getElementById('visitDetailsForm').style.display = 'block';
-        } else {
-            showMessage(data.message || 'Registration failed', 'error');
+        if (!registerResponse.ok || !registerData.success) {
+            showMessage(registerData.message || 'Registration failed. Please try again.', 'error');
+            return;
         }
+
+        showMessage('✅ Registration successful! Now enter visit details.', 'success');
+        isNewVisitor = false;
+        document.getElementById('newVisitorForm').style.display = 'none';
+        document.getElementById('visitDetailsForm').style.display = 'block';
     } catch (error) {
+        console.error('Registration error:', error);
         showMessage('Registration failed. Please try again.', 'error');
     }
 }
@@ -249,20 +252,21 @@ async function submitVisitorRequest() {
     }
 
     try {
+        // ✅ STEP 2: Submit visit request (purpose + whom to meet)
         const response = await fetch(`${API_BASE_URL}/visitors/check-in`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 phoneNumber: currentPhone, 
                 purpose, 
-                whomToMeet 
+                whomToMeet
             })
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-            showMessage('✅ Check-in successful! Please wait for receptionist approval. This page will close in 3 seconds...', 'success');
+            showMessage('✅ Visit request submitted! Please wait for receptionist approval. This page will close in 3 seconds...', 'success');
             
             // Close the page after check-in to prevent manipulation
             setTimeout(() => {

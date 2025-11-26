@@ -39,9 +39,9 @@ router.get('/check/:phoneNumber', async (req, res) => {
 });
 
 /**
- * Register new visitor (DEPRECATED - kept for backward compatibility)
- * This endpoint NO LONGER creates database records
- * Registration data is stored temporarily on frontend and created during check-in
+ * Register new visitor - Step 1: Create base visitor record
+ * This creates a visitor record with basic details (name, phone, email, place)
+ * No visit request is created yet - that happens in check-in with purpose/whom_to_meet
  * POST /api/visitors/register
  */
 router.post('/register', async (req, res) => {
@@ -90,14 +90,29 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // ✅ FIX: NO database insert here!
-        // Data will be stored temporarily in frontend sessionStorage
-        // ONE complete record will be created during check-in with Purpose + Whom to Meet
+        // ✅ STEP 1: Create base visitor profile (NO visit request yet)
+        // Check if visitor already exists
+        const checkQuery = 'SELECT * FROM visitors WHERE phone_number = ? ORDER BY created_at DESC LIMIT 1';
+        const [existing] = await promisePool.execute(checkQuery, [phoneNumber]);
+
+        let visitorId;
+        if (existing.length > 0) {
+            // Update existing visitor's basic info
+            const updateQuery = 'UPDATE visitors SET name = ?, email = ?, place = ? WHERE phone_number = ? AND id = ?';
+            await promisePool.execute(updateQuery, [name, email, place, phoneNumber, existing[0].id]);
+            visitorId = existing[0].id;
+        } else {
+            // Insert new base visitor record (no purpose/whom_to_meet yet)
+            const insertQuery = 'INSERT INTO visitors (name, phone_number, email, place, status) VALUES (?, ?, ?, ?, "draft")';
+            const [result] = await promisePool.execute(insertQuery, [name, phoneNumber, email, place]);
+            visitorId = result.insertId;
+        }
 
         res.json({
             success: true,
-            message: 'Registration data verified successfully. Please proceed to enter visit details.',
+            message: 'Registration successful! Please proceed to enter visit details.',
             visitor: {
+                id: visitorId,
                 name,
                 phoneNumber,
                 email,
@@ -105,23 +120,24 @@ router.post('/register', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Error verifying registration:', error);
+        console.error('Error registering visitor:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to verify registration data'
+            message: 'Failed to register visitor'
         });
     }
 });
 
 /**
- * Create visitor visit entry
+ * Create visitor visit request - Step 2: Add purpose and whom_to_meet
+ * This creates a NEW visit request record linked to the visitor's base profile
  * POST /api/visitors/check-in
  */
 router.post('/check-in', async (req, res) => {
     try {
-        const { phoneNumber, purpose, whomToMeet, name, email, place, isNewVisitor } = req.body;
+        const { phoneNumber, purpose, whomToMeet } = req.body;
 
-        // ✅ BACKEND VALIDATION: Visitor Check-in - Purpose and Whom to Meet mandatory
+        // ✅ BACKEND VALIDATION: Purpose and Whom to Meet mandatory
         if (!phoneNumber || phoneNumber.trim().length === 0) {
             return res.status(400).json({
                 success: false,
@@ -141,53 +157,38 @@ router.post('/check-in', async (req, res) => {
             });
         }
 
-        let visitorName, visitorEmail, visitorPlace;
+        // Get visitor's base profile
+        const visitorQuery = 'SELECT * FROM visitors WHERE phone_number = ? ORDER BY created_at DESC LIMIT 1';
+        const [visitorRows] = await promisePool.execute(visitorQuery, [phoneNumber]);
 
-        // ✅ FIX: Handle new visitor (first-time) vs returning visitor differently
-        if (isNewVisitor) {
-            // NEW VISITOR: Validate registration data
-            if (!name || !email || !place) {
-                return res.status(400).json({
-                    success: false,
-                    message: '❌ Registration data is incomplete. Please start over.'
-                });
-            }
-            visitorName = name;
-            visitorEmail = email;
-            visitorPlace = place;
-        } else {
-            // RETURNING VISITOR: Get existing visitor data
-            const visitorQuery = 'SELECT * FROM visitors WHERE phone_number = ?';
-            const [visitorRows] = await promisePool.execute(visitorQuery, [phoneNumber]);
-
-            if (visitorRows.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Visitor not found. Please register first.'
-                });
-            }
-
-            const visitor = visitorRows[0];
-            visitorName = visitor.name;
-            visitorEmail = visitor.email;
-            visitorPlace = visitor.place;
+        if (visitorRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Visitor not found. Please register first.'
+            });
         }
 
-        // ✅ FIX: Create ONE complete visitor request (NO duplicate!)
-        // This is the ONLY insert - happens only when Purpose + Whom to Meet are provided
+        const visitor = visitorRows[0];
+
+        // Determine if this is a returning visitor (has previous visits with status other than draft)
+        const previousVisitsQuery = 'SELECT COUNT(*) as visit_count FROM visitors WHERE phone_number = ? AND status != "draft"';
+        const [countResult] = await promisePool.execute(previousVisitsQuery, [phoneNumber]);
+        const isReturning = countResult[0].visit_count > 0;
+
+        // ✅ STEP 2: Create ONE complete visit request
         const insertQuery = `
             INSERT INTO visitors (name, phone_number, email, place, purpose, whom_to_meet, status, is_returning)
             VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
         `;
         
         const [result] = await promisePool.execute(insertQuery, [
-            visitorName,
+            visitor.name,
             phoneNumber,
-            visitorEmail,
-            visitorPlace,
+            visitor.email,
+            visitor.place,
             purpose,
             whomToMeet,
-            !isNewVisitor  // is_returning = true for old visitors, false for new
+            isReturning
         ]);
 
         res.json({
@@ -195,7 +196,7 @@ router.post('/check-in', async (req, res) => {
             message: 'Visit request submitted. Waiting for receptionist approval.',
             visit: {
                 id: result.insertId,
-                visitorName: visitorName,
+                visitorName: visitor.name,
                 purpose,
                 whomToMeet,
                 status: 'pending'

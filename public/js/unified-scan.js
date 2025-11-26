@@ -204,7 +204,7 @@ async function registerVisitor() {
     }
 
     try {
-        // ✅ STEP 1: Register visitor with backend (creates base visitor record)
+        // ✅ STEP 1: Verify OTP and store registration data temporarily
         const registerResponse = await fetch(`${API_BASE_URL}/visitors/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -224,8 +224,15 @@ async function registerVisitor() {
             return;
         }
 
+        // Store registration data in sessionStorage for Step 2
+        sessionStorage.setItem('newVisitorData', JSON.stringify({
+            name,
+            email,
+            place,
+            phoneNumber: currentPhone
+        }));
+
         showMessage('✅ Registration successful! Now enter visit details.', 'success');
-        isNewVisitor = false;
         document.getElementById('newVisitorForm').style.display = 'none';
         document.getElementById('visitDetailsForm').style.display = 'block';
     } catch (error) {
@@ -252,15 +259,32 @@ async function submitVisitorRequest() {
     }
 
     try {
-        // ✅ STEP 2: Submit visit request (purpose + whom to meet)
+        // ✅ STEP 2: Submit visit request with registration data if new visitor
+        const newVisitorData = sessionStorage.getItem('newVisitorData');
+        let requestBody = {
+            phoneNumber: currentPhone, 
+            purpose, 
+            whomToMeet
+        };
+
+        // If new visitor, include registration data
+        if (newVisitorData) {
+            const visitorInfo = JSON.parse(newVisitorData);
+            requestBody = {
+                ...requestBody,
+                name: visitorInfo.name,
+                email: visitorInfo.email,
+                place: visitorInfo.place,
+                isNewVisitor: true
+            };
+            // Clear stored data after use
+            sessionStorage.removeItem('newVisitorData');
+        }
+
         const response = await fetch(`${API_BASE_URL}/visitors/check-in`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                phoneNumber: currentPhone, 
-                purpose, 
-                whomToMeet
-            })
+            body: JSON.stringify(requestBody)
         });
 
         const data = await response.json();

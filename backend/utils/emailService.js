@@ -168,7 +168,30 @@ class EmailService {
 
     async sendStaffNotification(email, name, visitorName, visitorPurpose, acceptanceTime) {
         // Use the actual acceptance timestamp from database, not current time
-        const timeToShow = acceptanceTime ? new Date(acceptanceTime).toLocaleString() : new Date().toLocaleString();
+        // Format: MM/DD/YYYY, HH:MM:SS AM/PM
+        let timeToShow;
+        if (acceptanceTime) {
+            const timestamp = new Date(acceptanceTime);
+            timeToShow = timestamp.toLocaleString('en-US', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: true 
+            });
+        } else {
+            timeToShow = new Date().toLocaleString('en-US', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: true 
+            });
+        }
         
         const subject = '🔔 Visitor Notification - Someone is here to meet you';
         const html = `

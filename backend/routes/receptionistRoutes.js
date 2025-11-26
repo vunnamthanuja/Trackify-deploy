@@ -116,6 +116,7 @@ router.post('/process-visit', async (req, res) => {
             if (staffRows.length > 0) {
                 const staff = staffRows[0];
                 if (staff.email) {
+                    console.log('📧 Sending staff notification with approval time:', now);
                     await emailService.sendStaffNotification(
                         staff.email,
                         staff.name,
@@ -123,6 +124,7 @@ router.post('/process-visit', async (req, res) => {
                         visit.purpose,
                         now  // Pass the actual acceptance timestamp
                     );
+                    console.log('✅ Staff notification sent successfully');
                 }
             }
         }

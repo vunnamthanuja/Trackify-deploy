@@ -15,7 +15,7 @@ router.get('/visitor-visits', async (req, res) => {
                 CASE 
                     WHEN status = 'pending' THEN created_at
                     WHEN status = 'accepted' THEN check_in_time
-                    WHEN status = 'rejected' THEN updated_at
+                    WHEN status = 'rejected' THEN approved_at
                     ELSE check_in_time
                 END as in_time,
                 check_out_time as out_time, 

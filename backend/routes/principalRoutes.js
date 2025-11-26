@@ -12,16 +12,21 @@ router.get('/daily-report', async (req, res) => {
         const { date } = req.query;
         const reportDate = date || new Date().toISOString().split('T')[0];
 
-        // Get visitor visits for the day
+        // Get visitor visits for the day (including all statuses)
         const visitorQuery = `
             SELECT 
                 id, name, phone_number, email, purpose, whom_to_meet,
-                check_in_time as in_time,
+                CASE 
+                    WHEN status = 'pending' THEN created_at
+                    WHEN status = 'accepted' THEN check_in_time
+                    WHEN status = 'rejected' THEN approved_at
+                    ELSE check_in_time
+                END as in_time,
                 check_out_time as out_time,
                 status, created_at, place
             FROM visitors
-            WHERE status = 'accepted' AND DATE(check_in_time) = ?
-            ORDER BY check_in_time ASC
+            WHERE DATE(created_at) = ?
+            ORDER BY created_at ASC
         `;
 
         const [visitorRows] = await promisePool.execute(visitorQuery, [reportDate]);
@@ -100,16 +105,21 @@ router.get('/report-range', async (req, res) => {
             });
         }
 
-        // Get visitor visits for the date range
+        // Get visitor visits for the date range (including all statuses)
         const visitorQuery = `
             SELECT 
                 id, name, phone_number, email, purpose, whom_to_meet,
-                check_in_time as in_time,
+                CASE 
+                    WHEN status = 'pending' THEN created_at
+                    WHEN status = 'accepted' THEN check_in_time
+                    WHEN status = 'rejected' THEN approved_at
+                    ELSE check_in_time
+                END as in_time,
                 check_out_time as out_time,
                 status, created_at, place
             FROM visitors
-            WHERE DATE(check_in_time) BETWEEN ? AND ?
-            ORDER BY check_in_time ASC
+            WHERE DATE(created_at) BETWEEN ? AND ?
+            ORDER BY created_at ASC
         `;
 
         const [visitorRows] = await promisePool.execute(visitorQuery, [fromDate, toDate]);

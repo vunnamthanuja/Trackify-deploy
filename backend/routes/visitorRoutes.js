@@ -39,7 +39,9 @@ router.get('/check/:phoneNumber', async (req, res) => {
 });
 
 /**
- * Register new visitor
+ * Register new visitor (DEPRECATED - kept for backward compatibility)
+ * This endpoint NO LONGER creates database records
+ * Registration data is stored temporarily on frontend and created during check-in
  * POST /api/visitors/register
  */
 router.post('/register', async (req, res) => {
@@ -88,32 +90,14 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Check if visitor already exists
-        const checkQuery = 'SELECT * FROM visitors WHERE phone_number = ?';
-        const [existing] = await promisePool.execute(checkQuery, [phoneNumber]);
-
-        if (existing.length > 0) {
-            // Update email if not set
-            if (!existing[0].email && email) {
-                await promisePool.execute('UPDATE visitors SET email = ? WHERE id = ?', [email, existing[0].id]);
-                existing[0].email = email;
-            }
-            return res.json({
-                success: true,
-                message: 'Visitor already registered',
-                visitor: existing[0]
-            });
-        }
-
-        // Insert new visitor with email
-        const insertQuery = 'INSERT INTO visitors (name, phone_number, email, place) VALUES (?, ?, ?, ?)';
-        const [result] = await promisePool.execute(insertQuery, [name, phoneNumber, email, place]);
+        // ✅ FIX: NO database insert here!
+        // Data will be stored temporarily in frontend sessionStorage
+        // ONE complete record will be created during check-in with Purpose + Whom to Meet
 
         res.json({
             success: true,
-            message: 'Visitor registered successfully',
+            message: 'Registration data verified successfully. Please proceed to enter visit details.',
             visitor: {
-                id: result.insertId,
                 name,
                 phoneNumber,
                 email,
@@ -121,10 +105,10 @@ router.post('/register', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Error registering visitor:', error);
+        console.error('Error verifying registration:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to register visitor'
+            message: 'Failed to verify registration data'
         });
     }
 });
@@ -135,7 +119,7 @@ router.post('/register', async (req, res) => {
  */
 router.post('/check-in', async (req, res) => {
     try {
-        const { phoneNumber, purpose, whomToMeet } = req.body;
+        const { phoneNumber, purpose, whomToMeet, name, email, place, isNewVisitor } = req.body;
 
         // ✅ BACKEND VALIDATION: Visitor Check-in - Purpose and Whom to Meet mandatory
         if (!phoneNumber || phoneNumber.trim().length === 0) {
@@ -157,35 +141,53 @@ router.post('/check-in', async (req, res) => {
             });
         }
 
-        // Get visitor ID
-        const visitorQuery = 'SELECT * FROM visitors WHERE phone_number = ?';
-        const [visitorRows] = await promisePool.execute(visitorQuery, [phoneNumber]);
+        let visitorName, visitorEmail, visitorPlace;
 
-        if (visitorRows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Visitor not found. Please register first.'
-            });
+        // ✅ FIX: Handle new visitor (first-time) vs returning visitor differently
+        if (isNewVisitor) {
+            // NEW VISITOR: Validate registration data
+            if (!name || !email || !place) {
+                return res.status(400).json({
+                    success: false,
+                    message: '❌ Registration data is incomplete. Please start over.'
+                });
+            }
+            visitorName = name;
+            visitorEmail = email;
+            visitorPlace = place;
+        } else {
+            // RETURNING VISITOR: Get existing visitor data
+            const visitorQuery = 'SELECT * FROM visitors WHERE phone_number = ?';
+            const [visitorRows] = await promisePool.execute(visitorQuery, [phoneNumber]);
+
+            if (visitorRows.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Visitor not found. Please register first.'
+                });
+            }
+
+            const visitor = visitorRows[0];
+            visitorName = visitor.name;
+            visitorEmail = visitor.email;
+            visitorPlace = visitor.place;
         }
 
-        const visitor = visitorRows[0];
-
-        // Allow multiple simultaneous visit requests - no restriction on active visits
-        // Visitors can submit multiple requests to meet different staff members or revisit
-
-        // Create NEW visitor record for this visit (NO check_in_time yet - only on approval)
+        // ✅ FIX: Create ONE complete visitor request (NO duplicate!)
+        // This is the ONLY insert - happens only when Purpose + Whom to Meet are provided
         const insertQuery = `
             INSERT INTO visitors (name, phone_number, email, place, purpose, whom_to_meet, status, is_returning)
-            VALUES (?, ?, ?, ?, ?, ?, 'pending', true)
+            VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
         `;
         
         const [result] = await promisePool.execute(insertQuery, [
-            visitor.name,
+            visitorName,
             phoneNumber,
-            visitor.email,
-            visitor.place,
+            visitorEmail,
+            visitorPlace,
             purpose,
-            whomToMeet
+            whomToMeet,
+            !isNewVisitor  // is_returning = true for old visitors, false for new
         ]);
 
         res.json({
@@ -193,7 +195,7 @@ router.post('/check-in', async (req, res) => {
             message: 'Visit request submitted. Waiting for receptionist approval.',
             visit: {
                 id: result.insertId,
-                visitorName: visitor.name,
+                visitorName: visitorName,
                 purpose,
                 whomToMeet,
                 status: 'pending'

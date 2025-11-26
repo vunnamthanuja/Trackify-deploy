@@ -4,7 +4,10 @@ const { Client } = require('pg');
 const connectionString = 'postgresql://trackify_user:MuZ8ggwdHn6vhcB1PfKPdhUhOXGgs37V@dpg-d4g4qd8gjchc73dpv16g-a.singapore-postgres.render.com/trackify_db_8mte';
 
 async function createOTPTable() {
-    const client = new Client({ connectionString });
+    const client = new Client({ 
+        connectionString,
+        ssl: { rejectUnauthorized: false }
+    });
 
     try {
         await client.connect();

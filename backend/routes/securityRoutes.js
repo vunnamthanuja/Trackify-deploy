@@ -12,12 +12,17 @@ router.get('/visitor-visits', async (req, res) => {
         const query = `
             SELECT 
                 id, name, phone_number, purpose, whom_to_meet, 
-                check_in_time as in_time, 
+                CASE 
+                    WHEN status = 'pending' THEN created_at
+                    WHEN status = 'accepted' THEN check_in_time
+                    WHEN status = 'rejected' THEN updated_at
+                    ELSE check_in_time
+                END as in_time,
                 check_out_time as out_time, 
                 status, created_at
             FROM visitors
-            WHERE status = 'accepted' AND DATE(check_in_time) = CURRENT_DATE
-            ORDER BY check_in_time DESC
+            WHERE DATE(created_at) = CURRENT_DATE
+            ORDER BY created_at DESC
         `;
 
         const [rows] = await promisePool.execute(query);

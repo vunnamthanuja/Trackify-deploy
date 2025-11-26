@@ -45,6 +45,17 @@ async function loadVisitorVisits() {
                 if (visit.status === 'accepted') statusColor = 'color-green';
                 else if (visit.status === 'rejected') statusColor = 'color-red';
 
+                // Determine Out Time display based on status
+                let outTimeDisplay;
+                if (visit.out_time) {
+                    outTimeDisplay = formatDateTime(visit.out_time);
+                } else if (visit.status === 'accepted') {
+                    outTimeDisplay = 'Inside';
+                } else {
+                    // For pending and rejected visitors, show "-"
+                    outTimeDisplay = '-';
+                }
+
                 return `
                     <tr>
                         <td>${visit.name}</td>
@@ -52,7 +63,7 @@ async function loadVisitorVisits() {
                         <td>${visit.purpose}</td>
                         <td>${visit.whom_to_meet}</td>
                         <td>${formatDateTime(visit.in_time)}</td>
-                        <td>${visit.out_time ? formatDateTime(visit.out_time) : 'Inside'}</td>
+                        <td>${outTimeDisplay}</td>
                         <td>
                             <span class="status-badge status-${visit.status}">
                                 ${visit.status.toUpperCase()}

@@ -132,22 +132,8 @@ router.post('/check-in', async (req, res) => {
 
         const visitor = visitorRows[0];
 
-        // Check if visitor has an active (pending or accepted without checkout) visit
-        const activeVisitQuery = `
-            SELECT * FROM visitors 
-            WHERE phone_number = ? 
-            AND (status = 'pending' OR (status = 'accepted' AND check_out_time IS NULL))
-            ORDER BY created_at DESC 
-            LIMIT 1
-        `;
-        const [activeVisits] = await promisePool.execute(activeVisitQuery, [phoneNumber]);
-
-        if (activeVisits.length > 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'You already have an active visit. Please check out first or wait for approval.'
-            });
-        }
+        // Allow multiple simultaneous visit requests - no restriction on active visits
+        // Visitors can submit multiple requests to meet different staff members or revisit
 
         // Create NEW visitor record for this visit (NO check_in_time yet - only on approval)
         const insertQuery = `

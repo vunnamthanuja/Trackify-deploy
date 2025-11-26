@@ -152,6 +152,19 @@ main {
     min-height: 80px;
 }
 
+/* Dropdown optgroup styling */
+.form-group select optgroup {
+    font-weight: bold;
+    font-style: normal;
+    color: #667eea;
+    background-color: #f5f5f5;
+}
+
+.form-group select option {
+    padding: 8px;
+    color: #333;
+}
+
 /* Buttons */
 .btn-primary,
 .btn-secondary,

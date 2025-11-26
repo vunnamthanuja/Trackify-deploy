@@ -105,7 +105,19 @@ function displayReport(report) {
     // Display visitor details
     if (report.visitors.data.length > 0) {
         const visitorBody = document.getElementById('reportVisitorsBody');
-        visitorBody.innerHTML = report.visitors.data.map(visitor => `
+        visitorBody.innerHTML = report.visitors.data.map(visitor => {
+            // Determine Out Time display based on status
+            let outTimeDisplay;
+            if (visitor.out_time) {
+                outTimeDisplay = formatDateTime(visitor.out_time);
+            } else if (visitor.status === 'accepted') {
+                outTimeDisplay = 'Not checked out';
+            } else {
+                // For pending and rejected visitors, show "-"
+                outTimeDisplay = '-';
+            }
+            
+            return `
             <tr>
                 <td>${visitor.number}</td>
                 <td>${visitor.name}</td>
@@ -114,14 +126,15 @@ function displayReport(report) {
                 <td>${visitor.purpose}</td>
                 <td>${visitor.whom_to_meet}</td>
                 <td>${formatDateTime(visitor.in_time)}</td>
-                <td>${visitor.out_time ? formatDateTime(visitor.out_time) : 'Not checked out'}</td>
+                <td>${outTimeDisplay}</td>
                 <td>
                     <span class="status-badge status-${visitor.status}">
                         ${visitor.status.toUpperCase()}
                     </span>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     } else {
         document.getElementById('reportVisitorsBody').innerHTML = 
             '<tr><td colspan="9" class="no-data">No visitor data</td></tr>';
@@ -180,7 +193,16 @@ function downloadReportCSV() {
     
     currentReportData.visitors.data.forEach(visitor => {
         const inTime = visitor.in_time ? formatDateTime(visitor.in_time) : 'N/A';
-        const outTime = visitor.out_time ? formatDateTime(visitor.out_time) : 'Not checked out';
+        // Determine Out Time for CSV based on status
+        let outTime;
+        if (visitor.out_time) {
+            outTime = formatDateTime(visitor.out_time);
+        } else if (visitor.status === 'accepted') {
+            outTime = 'Not checked out';
+        } else {
+            // For pending and rejected visitors, show "-"
+            outTime = '-';
+        }
         csv += `${visitor.number},"${visitor.name}","${visitor.phone_number}","${visitor.place}","${visitor.purpose}","${visitor.whom_to_meet}","${inTime}","${outTime}",${visitor.status}\n`;
     });
 
@@ -244,17 +266,30 @@ function downloadReportPDF() {
     yPos += 5;
 
     const visitorHeaders = [['No.', 'Name', 'Phone', 'Place', 'Purpose', 'Whom to Meet', 'In Time', 'Out Time', 'Status']];
-    const visitorRows = currentReportData.visitors.data.map(visitor => [
-        visitor.number,
-        visitor.name,
-        visitor.phone_number,
-        visitor.place,
-        visitor.purpose,
-        visitor.whom_to_meet,
-        formatDateTime(visitor.in_time),
-        visitor.out_time ? formatDateTime(visitor.out_time) : 'Not checked out',
-        visitor.status
-    ]);
+    const visitorRows = currentReportData.visitors.data.map(visitor => {
+        // Determine Out Time for PDF based on status
+        let outTime;
+        if (visitor.out_time) {
+            outTime = formatDateTime(visitor.out_time);
+        } else if (visitor.status === 'accepted') {
+            outTime = 'Not checked out';
+        } else {
+            // For pending and rejected visitors, show "-"
+            outTime = '-';
+        }
+        
+        return [
+            visitor.number,
+            visitor.name,
+            visitor.phone_number,
+            visitor.place,
+            visitor.purpose,
+            visitor.whom_to_meet,
+            formatDateTime(visitor.in_time),
+            outTime,
+            visitor.status
+        ];
+    });
 
     doc.autoTable({
         head: visitorHeaders,

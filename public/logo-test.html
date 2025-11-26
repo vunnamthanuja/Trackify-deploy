@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logo Test - TRACKIFY</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header-test {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .header-test h1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-size: 2.5em;
+            margin: 0;
+        }
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .status {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .instructions {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="header-test">
+            <h1>
+                <img src="images/trackify-logo.png" alt="Trackify Logo" class="logo-icon" id="logoImg">
+                TRACKIFY
+            </h1>
+        </div>
+
+        <h2>🧪 Logo Test Page</h2>
+        
+        <div id="logoStatus" class="status">
+            <strong>Checking logo...</strong>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 Instructions:</h3>
+            <ol>
+                <li>Save your circular building logo image as: <code>trackify-logo.png</code></li>
+                <li>Place it in the folder: <code>public/images/</code></li>
+                <li>Refresh this page to verify the logo appears correctly</li>
+            </ol>
+            
+            <h4>✅ What You Should See:</h4>
+            <ul>
+                <li>Circular logo with building illustrations</li>
+                <li>Logo size: approximately 50x50 pixels</li>
+                <li>Properly aligned with "TRACKIFY" text</li>
+                <li>No broken image icon</li>
+            </ul>
+        </div>
+
+        <h3>📍 Logo Locations Updated:</h3>
+        <ul>
+            <li>✅ Home page (index.html)</li>
+            <li>✅ QR Scan page</li>
+            <li>✅ Receptionist Login & Dashboard</li>
+            <li>✅ Security Login & Dashboard</li>
+            <li>✅ Principal Login & Dashboard</li>
+            <li>✅ Email templates (OTP, visitor alerts)</li>
+        </ul>
+    </div>
+
+    <script>
+        const logoImg = document.getElementById('logoImg');
+        const statusDiv = document.getElementById('logoStatus');
+
+        logoImg.onload = function() {
+            statusDiv.className = 'status success';
+            statusDiv.innerHTML = '<strong>✅ SUCCESS!</strong><br>Logo loaded successfully. The image is properly placed in the correct folder.';
+        };
+
+        logoImg.onerror = function() {
+            statusDiv.className = 'status error';
+            statusDiv.innerHTML = '<strong>❌ ERROR!</strong><br>Logo not found. Please add <code>trackify-logo.png</code> to the <code>public/images/</code> folder.';
+        };
+    </script>
+</body>
+</html>

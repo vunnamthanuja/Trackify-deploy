@@ -268,10 +268,23 @@ router.post('/out', async (req, res) => {
     try {
         const { phoneNumber, purpose } = req.body;
 
-        if (!phoneNumber || !purpose) {
+        // ✅ BACKEND VALIDATION: Staff Going Out - Purpose is mandatory
+        if (!phoneNumber || phoneNumber.trim().length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Phone number and purpose are required'
+                message: '❌ Phone number is required'
+            });
+        }
+        if (!purpose || purpose.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '❌ Purpose is required. Please provide the reason for going out'
+            });
+        }
+        if (purpose.trim().length < 5) {
+            return res.status(400).json({
+                success: false,
+                message: '❌ Please provide a more detailed purpose (at least 5 characters)'
             });
         }
 

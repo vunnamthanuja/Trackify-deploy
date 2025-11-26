@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <header>
-            <h1><img src="images/trackify-logo.png" alt="Trackify Logo" class="logo-icon"> TRACKIFY</h1>
+            <h1>🎯 TRACKIFY</h1>
             <p class="tagline">Visitor & Staff Entry System</p>
         </header>
 
@@ -35,23 +35,23 @@
                 <div id="newVisitorForm" style="display: none;">
                     <h4>New Visitor - Registration Required</h4>
                     <div class="form-group">
-                        <label>Name:</label>
-                        <input type="text" id="visitorName" placeholder="Enter your name" required>
+                        <label>Name: <span style="color: red;">*</span></label>
+                        <input type="text" id="visitorName" placeholder="Enter your name" required minlength="3">
                     </div>
                     <div class="form-group">
-                        <label>Email:</label>
+                        <label>Email: <span style="color: red;">*</span></label>
                         <input type="email" id="visitorEmail" placeholder="Enter your email" required>
                     </div>
                     <div class="form-group">
-                        <label>Place:</label>
-                        <input type="text" id="visitorPlace" placeholder="Enter your place" required>
+                        <label>Place/Address: <span style="color: red;">*</span></label>
+                        <input type="text" id="visitorPlace" placeholder="Enter your place" required minlength="3">
                     </div>
                     <div class="form-group">
                         <button onclick="sendVisitorOTP()" class="btn-secondary" type="button" style="width: 100%; margin-bottom: 10px;">Send OTP to Email</button>
                     </div>
                     <div class="form-group">
-                        <label>OTP (Check your email):</label>
-                        <input type="tel" id="visitorOTP" placeholder="Enter 6-digit OTP from email" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required>
+                        <label>OTP (Check your email): <span style="color: red;">*</span></label>
+                        <input type="tel" id="visitorOTP" placeholder="Enter 6-digit OTP from email" maxlength="6" minlength="6" inputmode="numeric" autocomplete="one-time-code" required>
                         <small style="color: #666; display: block; margin-top: 5px;">Enter the OTP you received in your email</small>
                     </div>
                     <button onclick="registerVisitor()" class="btn-primary">Register & Continue</button>
@@ -61,11 +61,11 @@
                 <div id="visitDetailsForm" style="display: none;">
                     <h4>Visit Information</h4>
                     <div class="form-group">
-                        <label>Purpose of Visit:</label>
-                        <textarea id="visitPurpose" placeholder="Enter purpose of your visit" rows="3" required></textarea>
+                        <label>Purpose of Visit: <span style="color: red;">*</span></label>
+                        <textarea id="visitPurpose" placeholder="Enter purpose of your visit" rows="3" required minlength="5"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>Whom to Meet:</label>
+                        <label>Whom to Meet: <span style="color: red;">*</span></label>
                         <select id="whomToMeet" required>
                             <option value="">-- Select Person/Department --</option>
                             <option value="Principal">Principal</option>
@@ -104,8 +104,8 @@
                 <div id="staffOutForm" style="display: none;">
                     <h4>Staff Going Out</h4>
                     <div class="form-group">
-                        <label>Purpose:</label>
-                        <textarea id="staffPurpose" placeholder="Reason for going out (e.g., Lunch, Bank work, Meeting)" rows="3" required></textarea>
+                        <label>Purpose: <span style="color: red;">*</span></label>
+                        <textarea id="staffPurpose" placeholder="Reason for going out (e.g., Lunch, Bank work, Meeting)" rows="3" required minlength="5"></textarea>
                     </div>
                     <div class="info-box">
                         ⏰ <strong>Note:</strong> Your exit time will be automatically recorded and sent to security.

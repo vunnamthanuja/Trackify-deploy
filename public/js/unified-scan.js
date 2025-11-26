@@ -181,8 +181,25 @@ async function registerVisitor() {
     const place = document.getElementById('visitorPlace').value.trim();
     const otp = document.getElementById('visitorOTP').value.trim() || '000000'; // Default OTP if email not working
 
-    if (!name || !email || !place) {
-        showMessage('Please fill all required fields', 'error');
+    // ✅ VALIDATION: New Visitor - All fields mandatory
+    if (!name) {
+        showMessage('❌ Name is required. Please enter your name.', 'error');
+        document.getElementById('visitorName').focus();
+        return;
+    }
+    if (!email) {
+        showMessage('❌ Email is required. Please enter your email.', 'error');
+        document.getElementById('visitorEmail').focus();
+        return;
+    }
+    if (!place) {
+        showMessage('❌ Place/Address is required. Please enter your place.', 'error');
+        document.getElementById('visitorPlace').focus();
+        return;
+    }
+    if (!otp || otp.length < 6) {
+        showMessage('❌ Valid OTP is required. Please enter the 6-digit OTP sent to your email.', 'error');
+        document.getElementById('visitorOTP').focus();
         return;
     }
 
@@ -219,8 +236,15 @@ async function submitVisitorRequest() {
     const purpose = document.getElementById('visitPurpose').value.trim();
     const whomToMeet = document.getElementById('whomToMeet').value.trim();
 
-    if (!purpose || !whomToMeet) {
-        showMessage('Please fill all fields', 'error');
+    // ✅ VALIDATION: Old Visitor - Purpose and Whom to Meet are mandatory
+    if (!purpose) {
+        showMessage('❌ Purpose of Visit is required. Please enter the purpose of your visit.', 'error');
+        document.getElementById('visitPurpose').focus();
+        return;
+    }
+    if (!whomToMeet) {
+        showMessage('❌ Whom to Meet is required. Please select the person you want to meet.', 'error');
+        document.getElementById('whomToMeet').focus();
         return;
     }
 
@@ -310,8 +334,15 @@ function showStaffAction(action) {
 async function submitStaffOut() {
     const purpose = document.getElementById('staffPurpose').value.trim();
 
+    // ✅ VALIDATION: Staff - Purpose is mandatory
     if (!purpose) {
-        showMessage('Please enter purpose', 'error');
+        showMessage('❌ Purpose is required. Please enter the reason for going out.', 'error');
+        document.getElementById('staffPurpose').focus();
+        return;
+    }
+    if (purpose.length < 5) {
+        showMessage('❌ Please provide a more detailed purpose (at least 5 characters).', 'error');
+        document.getElementById('staffPurpose').focus();
         return;
     }
 

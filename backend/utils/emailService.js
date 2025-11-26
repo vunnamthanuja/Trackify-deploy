@@ -48,10 +48,7 @@ class EmailService {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1 style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <img src="https://raw.githubusercontent.com/vunnamthanuja/Trackify-deploy/main/public/images/trackify-logo.png" alt="Trackify" style="width: 40px; height: 40px; vertical-align: middle;">
-                            <span>TRACKIFY</span>
-                        </h1>
+                        <h1>🎯 TRACKIFY</h1>
                         <p>Visitor Management System</p>
                     </div>
                     <div class="content">

@@ -46,10 +46,35 @@ router.post('/register', async (req, res) => {
     try {
         const { name, phoneNumber, email, place, otp } = req.body;
 
-        if (!name || !phoneNumber || !email || !place || !otp) {
+        // ✅ BACKEND VALIDATION: New Visitor - All fields mandatory
+        if (!name || name.trim().length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'All fields are required'
+                message: '❌ Name is required for new visitor registration'
+            });
+        }
+        if (!phoneNumber || phoneNumber.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '❌ Phone number is required'
+            });
+        }
+        if (!email || email.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '❌ Email is required for new visitor registration'
+            });
+        }
+        if (!place || place.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '❌ Place/Address is required for new visitor registration'
+            });
+        }
+        if (!otp || otp.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '❌ OTP is required for verification'
             });
         }
 
@@ -112,10 +137,23 @@ router.post('/check-in', async (req, res) => {
     try {
         const { phoneNumber, purpose, whomToMeet } = req.body;
 
-        if (!phoneNumber || !purpose || !whomToMeet) {
+        // ✅ BACKEND VALIDATION: Visitor Check-in - Purpose and Whom to Meet mandatory
+        if (!phoneNumber || phoneNumber.trim().length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'All fields are required'
+                message: '❌ Phone number is required'
+            });
+        }
+        if (!purpose || purpose.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '❌ Purpose of Visit is required. Please provide the reason for your visit'
+            });
+        }
+        if (!whomToMeet || whomToMeet.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '❌ Whom to Meet is required. Please select the person you want to meet'
             });
         }
 

@@ -166,7 +166,10 @@ class EmailService {
         return this.sendEmail(email, subject, html);
     }
 
-    async sendStaffNotification(email, name, visitorName, visitorPurpose) {
+    async sendStaffNotification(email, name, visitorName, visitorPurpose, acceptanceTime) {
+        // Use the actual acceptance timestamp from database, not current time
+        const timeToShow = acceptanceTime ? new Date(acceptanceTime).toLocaleString() : new Date().toLocaleString();
+        
         const subject = '🔔 Visitor Notification - Someone is here to meet you';
         const html = `
             <!DOCTYPE html>
@@ -195,7 +198,7 @@ class EmailService {
                             <ul>
                                 <li><strong>Name:</strong> ${visitorName}</li>
                                 <li><strong>Purpose:</strong> ${visitorPurpose}</li>
-                                <li><strong>Time:</strong> ${new Date().toLocaleString()}</li>
+                                <li><strong>Approval Time:</strong> ${timeToShow}</li>
                             </ul>
                         </div>
                         <p>Please check with reception for more details.</p>

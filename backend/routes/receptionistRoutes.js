@@ -120,7 +120,8 @@ router.post('/process-visit', async (req, res) => {
                         staff.email,
                         staff.name,
                         visit.name,
-                        visit.purpose
+                        visit.purpose,
+                        now  // Pass the actual acceptance timestamp
                     );
                 }
             }

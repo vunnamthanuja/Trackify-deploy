@@ -116,7 +116,11 @@ router.post('/process-visit', async (req, res) => {
             if (staffRows.length > 0) {
                 const staff = staffRows[0];
                 if (staff.email) {
-                    console.log('📧 Sending staff notification with approval time:', now);
+                    console.log('📧 Sending staff notification');
+                    console.log('   Approval timestamp (UTC):', now);
+                    console.log('   Approval timestamp (IST):', now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
+                    console.log('   Staff email:', staff.email);
+                    console.log('   Visitor name:', visit.name);
                     await emailService.sendStaffNotification(
                         staff.email,
                         staff.name,

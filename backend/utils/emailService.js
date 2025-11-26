@@ -167,12 +167,13 @@ class EmailService {
     }
 
     async sendStaffNotification(email, name, visitorName, visitorPurpose, acceptanceTime) {
-        // Use the actual acceptance timestamp from database, not current time
-        // Format: MM/DD/YYYY, HH:MM:SS AM/PM
+        // Use the actual acceptance timestamp from database with IST timezone
+        // Format: MM/DD/YYYY, HH:MM:SS AM/PM in Asia/Kolkata timezone
         let timeToShow;
         if (acceptanceTime) {
             const timestamp = new Date(acceptanceTime);
-            timeToShow = timestamp.toLocaleString('en-US', { 
+            timeToShow = timestamp.toLocaleString('en-IN', { 
+                timeZone: 'Asia/Kolkata',
                 year: 'numeric', 
                 month: '2-digit', 
                 day: '2-digit',
@@ -182,7 +183,8 @@ class EmailService {
                 hour12: true 
             });
         } else {
-            timeToShow = new Date().toLocaleString('en-US', { 
+            timeToShow = new Date().toLocaleString('en-IN', { 
+                timeZone: 'Asia/Kolkata',
                 year: 'numeric', 
                 month: '2-digit', 
                 day: '2-digit',

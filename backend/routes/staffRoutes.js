@@ -112,7 +112,7 @@ router.post('/check-out', async (req, res) => {
         }
 
         // Verify staff exists
-        const staffQuery = 'SELECT * FROM staff WHERE staff_id = ?';
+        const staffQuery = 'SELECT * FROM staff WHERE id = ?';
         const [staffRows] = await promisePool.execute(staffQuery, [staffId]);
 
         if (staffRows.length === 0) {
@@ -124,19 +124,21 @@ router.post('/check-out', async (req, res) => {
 
         const outTime = new Date();
 
-        // Insert staff log
+        // Insert staff exit record into staff_entry_logs (exit_time)
         const insertQuery = `
-            INSERT INTO staff_logs (staff_id, purpose, out_time, log_type)
-            VALUES (?, ?, ?, 'out')
+            INSERT INTO staff_entry_logs (staff_id, exit_time, purpose)
+            VALUES ($1, $2, $3)
+            RETURNING id
         `;
 
-        const [result] = await promisePool.execute(insertQuery, [staffId, purpose, outTime]);
+        const [rows] = await promisePool.execute(insertQuery, [staffId, outTime, purpose]);
+        const insertedId = (rows && rows[0] && rows[0].id) || null;
 
         res.json({
             success: true,
             message: 'Check-out successful',
             log: {
-                id: result.insertId,
+                id: insertedId,
                 staffId,
                 staffName: staffRows[0].name,
                 purpose,
@@ -168,7 +170,7 @@ router.post('/check-in', async (req, res) => {
         }
 
         // Verify staff exists
-        const staffQuery = 'SELECT * FROM staff WHERE staff_id = ?';
+        const staffQuery = 'SELECT * FROM staff WHERE id = ?';
         const [staffRows] = await promisePool.execute(staffQuery, [staffId]);
 
         if (staffRows.length === 0) {
@@ -180,19 +182,21 @@ router.post('/check-in', async (req, res) => {
 
         const inTime = new Date();
 
-        // Insert staff log
+        // Insert staff entry record into staff_entry_logs (entry_time)
         const insertQuery = `
-            INSERT INTO staff_logs (staff_id, purpose, in_time, log_type)
-            VALUES (?, 'Return', ?, 'in')
+            INSERT INTO staff_entry_logs (staff_id, entry_time, purpose)
+            VALUES ($1, $2, $3)
+            RETURNING id
         `;
 
-        const [result] = await promisePool.execute(insertQuery, [staffId, inTime]);
+        const [rows] = await promisePool.execute(insertQuery, [staffId, inTime, 'Return']);
+        const insertedId = (rows && rows[0] && rows[0].id) || null;
 
         res.json({
             success: true,
             message: 'Check-in successful',
             log: {
-                id: result.insertId,
+                id: insertedId,
                 staffId,
                 staffName: staffRows[0].name,
                 inTime
@@ -239,10 +243,10 @@ router.get('/logs/:staffId', async (req, res) => {
 
         const query = `
             SELECT sl.*, s.name, s.department
-            FROM staff_logs sl
-            JOIN staff s ON sl.staff_id = s.staff_id
+            FROM staff_entry_logs sl
+            JOIN staff s ON sl.staff_id = s.id
             WHERE sl.staff_id = ?
-            ORDER BY sl.created_at DESC
+            ORDER BY COALESCE(sl.exit_time, sl.entry_time) DESC
         `;
 
         const [rows] = await promisePool.execute(query, [staffId]);
@@ -307,14 +311,16 @@ router.post('/out', async (req, res) => {
         const insertQuery = `
             INSERT INTO staff_entry_logs (staff_id, exit_time, entry_time, purpose)
             VALUES (?, ?, NULL, ?)
+            RETURNING id
         `;
-        const [result] = await promisePool.execute(insertQuery, [staff.id, exitTime, purpose]);
+        const [rows] = await promisePool.execute(insertQuery, [staff.id, exitTime, purpose]);
+        const insertedId = (rows && rows[0] && rows[0].id) || null;
 
         res.json({
             success: true,
             message: 'Exit recorded successfully',
             log: {
-                id: result.insertId,
+                id: insertedId,
                 staffId: staff.id,
                 staffName: staff.name,
                 purpose,

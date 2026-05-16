@@ -34,6 +34,7 @@ CREATE TABLE visitors (
     check_out_time TIMESTAMP,
     status VARCHAR(50) DEFAULT 'pending',
     approved_by VARCHAR(255),
+    approved_at TIMESTAMP,
     is_returning BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -61,45 +62,52 @@ CREATE TABLE staff_exit_logs (
 -- Create receptionist_credentials table
 CREATE TABLE receptionist_credentials (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(255),
+    phone_number VARCHAR(20),
     password VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
+    is_logged_in BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create security_credentials table
 CREATE TABLE security_credentials (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(255),
+    phone_number VARCHAR(20),
     password VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
+    is_logged_in BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create principal_credentials table
 CREATE TABLE principal_credentials (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(255),
+    phone_number VARCHAR(20),
     password VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
+    is_logged_in BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insert default staff members
-INSERT INTO staff (name, email, phone, department) VALUES
+INSERT INTO staff (name, email, phone_number, department) VALUES
 ('Krishna Gudi', 'krishnagudi@ksit.edu.in', '9964504954', 'Faculty'),
 ('Shruthi TS', 'shruthits@ksit.edu.in', '9742194553', 'Faculty');
 
 -- Insert default credentials (password: admin123 for all)
 -- Note: These are bcrypt hashed passwords for 'admin123'
-INSERT INTO receptionist_credentials (username, password, name) VALUES
-('receptionist', '$2a$10$YourHashedPasswordHere', 'Receptionist Admin');
+-- Insert default credential rows with placeholder phone numbers
+INSERT INTO receptionist_credentials (username, phone_number, password, name) VALUES
+('receptionist', '0000000000', '$2a$10$YourHashedPasswordHere', 'Receptionist Admin');
 
-INSERT INTO security_credentials (username, password, name) VALUES
-('security', '$2a$10$YourHashedPasswordHere', 'Security Admin');
+INSERT INTO security_credentials (username, phone_number, password, name) VALUES
+('security', '0000000000', '$2a$10$YourHashedPasswordHere', 'Security Admin');
 
-INSERT INTO principal_credentials (username, password, name) VALUES
-('principal', '$2a$10$YourHashedPasswordHere', 'Principal Admin');
+INSERT INTO principal_credentials (username, phone_number, password, name) VALUES
+('principal', '0000000000', '$2a$10$YourHashedPasswordHere', 'Principal Admin');
 
 -- Create indexes for better performance
 CREATE INDEX idx_visitors_status ON visitors(status);

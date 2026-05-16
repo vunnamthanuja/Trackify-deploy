@@ -50,6 +50,44 @@ router.post('/send-otp', async (req, res) => {
 });
 
 /**
+ * Verify OTP (without creating any database records)
+ * POST /api/auth/verify-otp
+ */
+router.post('/verify-otp', async (req, res) => {
+    try {
+        const { phoneNumber, otp, userType } = req.body;
+
+        if (!phoneNumber || !otp || !userType) {
+            return res.status(400).json({
+                success: false,
+                message: 'Phone number, OTP, and user type are required'
+            });
+        }
+
+        // Verify OTP
+        const isValid = await verifyOTP(phoneNumber, otp, userType);
+
+        if (!isValid) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid or expired OTP'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'OTP verified successfully'
+        });
+    } catch (error) {
+        console.error('Error verifying OTP:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to verify OTP'
+        });
+    }
+});
+
+/**
  * Login for Receptionist/Security/Principal
  * POST /api/auth/login
  */

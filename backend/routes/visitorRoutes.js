@@ -179,9 +179,10 @@ router.post('/check-in', async (req, res) => {
         const insertQuery = `
             INSERT INTO visitors (name, phone_number, email, place, purpose, whom_to_meet, status, is_returning)
             VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
+            RETURNING id
         `;
-        
-        const [result] = await promisePool.execute(insertQuery, [
+
+        const [rows] = await promisePool.execute(insertQuery, [
             visitorName,
             phoneNumber,
             visitorEmail,
@@ -191,11 +192,13 @@ router.post('/check-in', async (req, res) => {
             isReturning
         ]);
 
+        const insertedId = (rows && rows[0] && rows[0].id) || null;
+
         res.json({
             success: true,
             message: 'Visit request submitted. Waiting for receptionist approval.',
             visit: {
-                id: result.insertId,
+                id: insertedId,
                 visitorName: visitorName,
                 purpose,
                 whomToMeet,

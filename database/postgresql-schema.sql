@@ -92,10 +92,9 @@ CREATE TABLE principal_credentials (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert default staff members
+-- Insert default staff member
 INSERT INTO staff (name, email, phone_number, department) VALUES
-('Krishna Gudi', 'krishnagudi@ksit.edu.in', '9964504954', 'Faculty'),
-('Shruthi TS', 'shruthits@ksit.edu.in', '9742194553', 'Faculty');
+('Rajkumar', 'yashaswinikt0502@gmail.com', '8088943390', 'CSE');
 
 -- Insert default credentials (password: admin123 for all)
 -- Note: These are bcrypt hashed passwords for 'admin123'

@@ -1,8 +1,8 @@
 // API Configuration
-// This will automatically use the correct URL based on environment
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:10000/api' 
-    : 'https://trackify-deploy.onrender.com/api';
+// Use the local backend during development and the same-origin /api path in production.
+const API_BASE_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:3001/api'
+    : `${window.location.origin}/api`;
 
 // API Endpoints
 const API_ENDPOINTS = {
@@ -19,7 +19,7 @@ const API_ENDPOINTS = {
     getAllVisitors: `${API_BASE_URL}/visitors`,
 
     // Staff
-    checkStaff: (staffId) => `${API_BASE_URL}/staff/check/${staffId}`,
+    checkStaff: (phoneNumber) => `${API_BASE_URL}/staff/check/${phoneNumber}`,
     staffCheckOut: `${API_BASE_URL}/staff/check-out`,
     staffCheckIn: `${API_BASE_URL}/staff/check-in`,
     getAllStaff: `${API_BASE_URL}/staff`,

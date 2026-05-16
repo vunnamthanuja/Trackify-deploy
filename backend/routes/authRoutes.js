@@ -116,8 +116,12 @@ router.post('/login', async (req, res) => {
 
         const user = rows[0];
 
-        // Verify password (plain text comparison for now)
-        if (password !== user.password) {
+        // Verify password using bcrypt when stored password is hashed
+        const isPasswordValid = user.password?.startsWith('$2')
+            ? await bcrypt.compare(password, user.password)
+            : password === user.password;
+
+        if (!isPasswordValid) {
             return res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
@@ -170,7 +174,7 @@ router.post('/logout', async (req, res) => {
             });
         }
 
-        const query = `UPDATE ${userType} SET is_logged_in = FALSE WHERE phone_number = ?`;
+        const query = `UPDATE ${userType}_credentials SET is_logged_in = FALSE WHERE phone_number = ?`;
         await promisePool.execute(query, [phoneNumber]);
 
         res.json({

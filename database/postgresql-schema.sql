@@ -99,15 +99,15 @@ INSERT INTO staff (name, email, phone_number, department) VALUES
 
 -- Insert default credentials (password: admin123 for all)
 -- Note: These are bcrypt hashed passwords for 'admin123'
--- Insert default credential rows with placeholder phone numbers
+-- Insert default credential rows with phone numbers and proper password hash (admin123)
 INSERT INTO receptionist_credentials (username, phone_number, password, name) VALUES
-('receptionist', '0000000000', '$2a$10$YourHashedPasswordHere', 'Receptionist Admin');
+('receptionist', '9876543210', '$2a$10$hOYxHtrf2TRT0eG1oUYV4ehPOr69q/xT0MbLn8tKokLAMGvv6doxK', 'Receptionist Admin');
 
 INSERT INTO security_credentials (username, phone_number, password, name) VALUES
-('security', '0000000000', '$2a$10$YourHashedPasswordHere', 'Security Admin');
+('security', '9876543211', '$2a$10$hOYxHtrf2TRT0eG1oUYV4ehPOr69q/xT0MbLn8tKokLAMGvv6doxK', 'Security Admin');
 
 INSERT INTO principal_credentials (username, phone_number, password, name) VALUES
-('principal', '0000000000', '$2a$10$YourHashedPasswordHere', 'Principal Admin');
+('principal', '9876543212', '$2a$10$hOYxHtrf2TRT0eG1oUYV4ehPOr69q/xT0MbLn8tKokLAMGvv6doxK', 'Principal Admin');
 
 -- Create indexes for better performance
 CREATE INDEX idx_visitors_status ON visitors(status);

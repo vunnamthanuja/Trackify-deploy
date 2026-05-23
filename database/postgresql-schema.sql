@@ -20,6 +20,17 @@ CREATE TABLE staff (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create OTP verification table used by email-based authentication
+CREATE TABLE otp_verification (
+    id SERIAL PRIMARY KEY,
+    phone_number VARCHAR(20) NOT NULL,
+    otp VARCHAR(10) NOT NULL,
+    user_type VARCHAR(50) NOT NULL,
+    is_verified BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL
+);
+
 -- Create visitors table
 CREATE TABLE visitors (
     id SERIAL PRIMARY KEY,
@@ -114,3 +125,5 @@ CREATE INDEX idx_visitors_check_in ON visitors(check_in_time);
 CREATE INDEX idx_staff_email ON staff(email);
 CREATE INDEX idx_staff_entry_logs_staff_id ON staff_entry_logs(staff_id);
 CREATE INDEX idx_staff_exit_logs_staff_id ON staff_exit_logs(staff_id);
+CREATE INDEX idx_otp_verification_lookup ON otp_verification(phone_number, user_type, is_verified);
+CREATE INDEX idx_otp_verification_expires_at ON otp_verification(expires_at);

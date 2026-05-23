@@ -17,9 +17,10 @@ async function createOTPTable() {
         await client.query(`
             CREATE TABLE IF NOT EXISTS otp_verification (
                 id SERIAL PRIMARY KEY,
-                identifier VARCHAR(255) NOT NULL,
+                phone_number VARCHAR(20) NOT NULL,
                 otp VARCHAR(10) NOT NULL,
                 user_type VARCHAR(50) NOT NULL,
+                is_verified BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 expires_at TIMESTAMP NOT NULL
             );
@@ -29,10 +30,14 @@ async function createOTPTable() {
 
         // Create index for faster lookups
         await client.query(`
-            CREATE INDEX IF NOT EXISTS idx_otp_identifier ON otp_verification(identifier);
+            CREATE INDEX IF NOT EXISTS idx_otp_verification_lookup ON otp_verification(phone_number, user_type, is_verified);
         `);
 
-        console.log('✅ Index created on identifier column');
+        await client.query(`
+            CREATE INDEX IF NOT EXISTS idx_otp_verification_expires_at ON otp_verification(expires_at);
+        `);
+
+        console.log('✅ OTP verification indexes created successfully');
 
     } catch (error) {
         console.error('❌ Error:', error.message);

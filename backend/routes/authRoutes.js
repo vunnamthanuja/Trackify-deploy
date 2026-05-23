@@ -32,7 +32,14 @@ router.post('/send-otp', async (req, res) => {
             });
         }
         
-        await emailService.sendOTP(email, otp, 'User');
+        const emailResult = await emailService.sendOTP(email, otp, 'User');
+
+        if (!emailResult.success) {
+            return res.status(500).json({
+                success: false,
+                message: emailResult.error || 'Failed to send OTP'
+            });
+        }
 
         res.json({
             success: true,

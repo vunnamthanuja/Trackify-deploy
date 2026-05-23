@@ -4,7 +4,8 @@ const sgMail = require('@sendgrid/mail');
 class EmailService {
     constructor() {
         this.initialized = false;
-        this.fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@trackify.com';
+        this.fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.SENDGRID_SENDER_EMAIL || '';
+        this.configError = '';
         this.initializeSendGrid();
     }
 
@@ -12,8 +13,25 @@ class EmailService {
         try {
             // Check if SendGrid API key is configured
             if (!process.env.SENDGRID_API_KEY) {
-                console.log('📧 SendGrid not configured - Running in DEVELOPMENT MODE');
-                console.log('   Email notifications will be logged to console instead of being sent');
+                this.configError = 'SENDGRID_API_KEY is not configured';
+                if (process.env.NODE_ENV === 'production') {
+                    console.error('❌ ' + this.configError);
+                } else {
+                    console.log('📧 SendGrid not configured - Running in DEVELOPMENT MODE');
+                    console.log('   Email notifications will be logged to console instead of being sent');
+                }
+                this.initialized = false;
+                return;
+            }
+
+            if (!this.fromEmail) {
+                this.configError = 'SENDGRID_FROM_EMAIL is not configured or not set to a verified sender';
+                if (process.env.NODE_ENV === 'production') {
+                    console.error('❌ ' + this.configError);
+                } else {
+                    console.log('📧 SendGrid sender email is not configured - Running in DEVELOPMENT MODE');
+                    console.log('   Set SENDGRID_FROM_EMAIL to a verified sender address in Render');
+                }
                 this.initialized = false;
                 return;
             }
@@ -241,6 +259,10 @@ class EmailService {
 
     async sendEmail(to, subject, html) {
         if (!this.initialized) {
+            if (process.env.NODE_ENV === 'production') {
+                return { success: false, error: this.configError || 'SendGrid is not configured' };
+            }
+
             console.log('\n📧 EMAIL (Development Mode):');
             console.log(`To: ${to}`);
             console.log(`Subject: ${subject}`);
@@ -264,7 +286,13 @@ class EmailService {
             if (error.response) {
                 console.error('SendGrid Error:', error.response.body);
             }
-            return { success: false, error: error.message };
+            const sendGridMessage = error.response?.body?.errors?.[0]?.message;
+            const responseBody = error.response?.body ? JSON.stringify(error.response.body) : '';
+            return {
+                success: false,
+                error: sendGridMessage || error.message,
+                details: responseBody
+            };
         }
     }
 }

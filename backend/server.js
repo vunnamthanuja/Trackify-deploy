@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 require('dotenv').config();
 
-const { testConnection } = require('./models/db');
+const { testConnection, ensureOtpVerificationTable } = require('./models/db');
 
 // Catch uncaught exceptions
 process.on('uncaughtException', (err) => {
@@ -34,9 +34,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Test database connection on startup
-testConnection();
-
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/visitors', visitorRoutes);
@@ -59,6 +56,24 @@ app.get('/qr-scan.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/qr-scan.html'));
 });
 
+async function startServer() {
+    await testConnection();
+    await ensureOtpVerificationTable();
+
+    // Start server - Listen on all network interfaces (0.0.0.0)
+    app.listen(PORT, '0.0.0.0', () => {
+        // Use APP_URL from env, RENDER_EXTERNAL_URL for Render, or fallback to localhost
+        const baseURL = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+        const qrCodeURL = `${baseURL}/scan`;
+
+        console.log(`🚀 TRACKIFY Server running on port ${PORT}`);
+        console.log(`📱 QR Code URL: ${qrCodeURL}`);
+        console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`📡 Network Access: Server accessible on local network`);
+        console.log(`🔗 Base URL: ${baseURL}`);
+    });
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -77,17 +92,9 @@ app.use((req, res) => {
     });
 });
 
-// Start server - Listen on all network interfaces (0.0.0.0)
-app.listen(PORT, '0.0.0.0', () => {
-    // Use APP_URL from env, RENDER_EXTERNAL_URL for Render, or fallback to localhost
-    const baseURL = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
-    const qrCodeURL = `${baseURL}/scan`;
-    
-    console.log(`🚀 TRACKIFY Server running on port ${PORT}`);
-    console.log(`📱 QR Code URL: ${qrCodeURL}`);
-    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📡 Network Access: Server accessible on local network`);
-    console.log(`🔗 Base URL: ${baseURL}`);
+startServer().catch((error) => {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
 });
 
 module.exports = app;
